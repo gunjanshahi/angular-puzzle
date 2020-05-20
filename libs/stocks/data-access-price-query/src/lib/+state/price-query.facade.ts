@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { select, Store } from '@ngrx/store';
-import { FetchPriceQuery } from './price-query.actions';
+import { FetchPriceQuery, SelectDateRange } from './price-query.actions';
 import { PriceQueryPartialState } from './price-query.reducer';
-import { getSelectedSymbol, getAllPriceQueries } from './price-query.selectors';
+import { getSelectedSymbol, getAllPriceQueries, getPriceQueryError, getFilteredPriceQueries } from './price-query.selectors';
 import { map, skip } from 'rxjs/operators';
 
 @Injectable()
@@ -15,10 +15,18 @@ export class PriceQueryFacade {
       priceQueries.map(priceQuery => [priceQuery.date, priceQuery.close])
     )
   );
-
+  getFilteredPriceQuery$ =  this.store.pipe(
+    select(getFilteredPriceQueries),
+    skip(1),
+    map(priceQueries =>
+      priceQueries.map(priceQuery => [priceQuery.date, priceQuery.close])
+    )
+  );
+  priceQueryerror$ = this.store.pipe(select(getPriceQueryError));
   constructor(private store: Store<PriceQueryPartialState>) {}
 
-  fetchQuote(symbol: string, period: string) {
-    this.store.dispatch(new FetchPriceQuery(symbol, period));
+  fetchQuote(symbol: string, from: number, to: number) {
+    this.store.dispatch(new FetchPriceQuery(symbol));
+    this.store.dispatch(new SelectDateRange(from, to));
   }
 }
